@@ -36,7 +36,12 @@ class TwistPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         $this->twist->setPanel($panel);
-        $this->twist->loadSetupAddons();
+
+        try {
+            $this->twist->loadSetupAddons();
+        } catch (\Exception $e) {
+            //
+        }
 
         return $panel
             ->id('obelaw-twist')
