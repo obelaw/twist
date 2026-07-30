@@ -12,4 +12,10 @@ class Action extends BaseModel
      * @var string|null
      */
     protected $table = 'twist_actions';
+
+    protected $fillable = [
+        'code',
+        'name',
+        'class_name',
+    ];
 }
