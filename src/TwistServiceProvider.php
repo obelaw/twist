@@ -9,6 +9,7 @@ use Obelaw\Twist\Console\MakeCommand;
 use Obelaw\Twist\Console\MigrateCommand;
 use Obelaw\Twist\Console\SetupAddonCommand;
 use Obelaw\Twist\Console\SetupClearCommand;
+use Obelaw\Twist\Console\ActionStateCommand;
 use Obelaw\Twist\Console\SetupCommand;
 use Obelaw\Twist\Console\SetupDisableCommand;
 use Obelaw\Twist\Console\SetupEnableCommand;
@@ -65,6 +66,7 @@ class TwistServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            ActionStateCommand::class,
             SetupCommand::class,
             SetupAddonCommand::class,
             SetupEnableCommand::class,
