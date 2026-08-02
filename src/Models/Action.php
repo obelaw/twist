@@ -18,4 +18,9 @@ class Action extends BaseModel
         'name',
         'class_name',
     ];
+
+    public function logs()
+    {
+        return $this->hasMany(ActionLog::class, 'action_id');
+    }
 }
