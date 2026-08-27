@@ -16,6 +16,11 @@ class ActionCauser extends BaseModel
      */
     protected $table = 'twist_action_causers';
 
+    protected $fillable = [
+        'causerable_type',
+        'causerable_id',
+    ];
+
     public function causerable(): MorphTo
     {
         return $this->morphTo();

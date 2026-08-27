@@ -12,4 +12,15 @@ class Action extends BaseModel
      * @var string|null
      */
     protected $table = 'twist_actions';
+
+    protected $fillable = [
+        'code',
+        'name',
+        'class_name',
+    ];
+
+    public function logs()
+    {
+        return $this->hasMany(ActionLog::class, 'action_id');
+    }
 }

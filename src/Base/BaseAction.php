@@ -92,7 +92,7 @@ abstract class BaseAction
         }
 
         // Extract payload/changes
-        $changes = $arguments[0] ?? [];
+        $changes = $arguments ?? [];
         if (!is_array($changes)) {
             $changes = [];
         }

@@ -2,10 +2,10 @@
 
 namespace Obelaw\Twist\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Obelaw\Twist\Base\BaseModel;
 use Obelaw\Twist\Models\ActionCauser;
 
-class ActionLog extends Model
+class ActionLog extends BaseModel
 {
     /**
      * The table associated with the model.
@@ -13,6 +13,16 @@ class ActionLog extends Model
      * @var string|null
      */
     protected $table = 'twist_action_logs';
+
+    protected $fillable = [
+        'action_id',
+        'causer_id',
+        'subject_type',
+        'subject_id',
+        'payload',
+        'status',
+        'exception',
+    ];
 
     public $timestamps = false; // نكتفي بـ created_at فقط
     protected $guarded = [];
