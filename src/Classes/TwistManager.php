@@ -9,12 +9,13 @@ use Obelaw\Twist\Contracts\HasHooks;
 use Obelaw\Twist\Contracts\HasRouteApi;
 use Obelaw\Twist\Models\Addon;
 
-class TwistClass
+class TwistManager
 {
     private bool $disloadSetupAddons = false;
     private array $addons = [];
     private array $availableAddons = [];
     private array $migratePaths = [];
+    private string|null $connection = null;
     private string|null $uploadDirectory  = null;
 
     public function make(): static
@@ -158,6 +159,26 @@ class TwistClass
     public function getUploadDirectory()
     {
         return $this->uploadDirectory;
+    }
+
+    /**
+     * Get the value of connection
+     */
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
+     * Set the value of connection
+     *
+     * @return  self
+     */
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
+
+        return $this;
     }
 
     /**

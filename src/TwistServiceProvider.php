@@ -4,7 +4,7 @@ namespace Obelaw\Twist;
 
 use Illuminate\Support\ServiceProvider;
 use Obelaw\Twist\Addons\AddonsPool;
-use Obelaw\Twist\Classes\TwistClass;
+use Obelaw\Twist\Classes\TwistManager;
 use Obelaw\Twist\Console\MakeCommand;
 use Obelaw\Twist\Console\MigrateCommand;
 use Obelaw\Twist\Console\SetupAddonCommand;
@@ -33,7 +33,7 @@ class TwistServiceProvider extends ServiceProvider
 
         $this->mergeConfigFrom(__DIR__ . '/../config/tenancy.php', 'obelaw.tenancy');
 
-        $this->app->singleton('obelaw.twist.twist-class', TwistClass::class);
+        $this->app->singleton('obelaw.twist.twist-class', TwistManager::class);
 
         // Driver factory
         $this->app->singleton(DriverFactory::class, function ($app) {
