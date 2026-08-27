@@ -37,6 +37,7 @@ class TwistClass
     private bool $disloadSetupAddons = false;
     private array $addons = [];
     private array $availableAddons = [];
+    private array $migratePaths = [];
     private string|null $uploadDirectory  = null;
 
     public function make(): static
@@ -195,6 +196,26 @@ class TwistClass
         $this->addons = [];
 
         return $this;
+    }
+
+    /**
+     * Add a migration path.
+     *
+     * @return  self
+     */
+    public function addMigratePath(string $path)
+    {
+        array_push($this->migratePaths, $path);
+
+        return $this;
+    }
+
+    /**
+     * Get all migration paths.
+     */
+    public function getMigratePaths(): array
+    {
+        return $this->migratePaths;
     }
 
     /**

@@ -18,9 +18,7 @@ class MigrateTenancyService extends BaseService
 
         DB::statement("CREATE DATABASE IF NOT EXISTS {$dbName}");
 
-        $migratePaths = [
-            '\obelaw\permit\database\migrations'
-        ];
+        $migratePaths = Twist::getMigratePaths();
 
         foreach (Twist::getAddons() as $addon) {
             if ($addon instanceof HasMigration) {
