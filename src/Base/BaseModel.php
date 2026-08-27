@@ -27,6 +27,6 @@ abstract class BaseModel extends Model
             $this->setConnection($connection);
         }
 
-        $this->setTable(config('obelaw.database.table_prefix', Twist::getPrefixTable()) . $this->postfix . $this->getTable());
+        $this->setTable(config('obelaw.database.table_prefix', 'obelaw_') . $this->postfix . $this->getTable());
     }
 }

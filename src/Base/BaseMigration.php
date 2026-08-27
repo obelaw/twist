@@ -26,6 +26,6 @@ abstract class BaseMigration extends Migration
      */
     public function __construct()
     {
-        $this->prefix = config('obelaw.database.table_prefix', Twist::getPrefixTable()) . $this->postfix;
+        $this->prefix = config('obelaw.database.table_prefix', 'obelaw_') . $this->postfix;
     }
 }
