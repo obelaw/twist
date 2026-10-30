@@ -45,7 +45,7 @@ class MultiTenantDriver implements IsolationDriver
         }
 
         $this->previousConnection = DB::getDefaultConnection();
-        // DB::setDefaultConnection($connectionName);
+        DB::setDefaultConnection($connectionName);
         $this->tenantConnectionName = $connectionName;
     }
 
