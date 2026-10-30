@@ -11,12 +11,21 @@ use Obelaw\Twist\Tenancy\DTO\TenantDTO;
 
 class MigrateTenancyService extends BaseService
 {
-
     public function migrateAddons($tenant)
     {
-        $dbName = config('database.connections.mysql.database') . '_' . $tenant->id;
+        $defaultConn = config('database.default', 'mysql');
+        $base = config("database.connections.{$defaultConn}") ?? config('database.connections.mysql');
 
-        DB::statement("CREATE DATABASE IF NOT EXISTS {$dbName}");
+        $driver = $base['driver'] ?? 'mysql';
+        if ($driver === 'sqlite') {
+            $dbName = database_path('tenant_' . $tenant->id . '.sqlite');
+            if (!file_exists($dbName)) {
+                touch($dbName);
+            }
+        } else {
+            $dbName = ($base['database'] ?? 'laravel') . '_' . $tenant->id;
+            DB::statement("CREATE DATABASE IF NOT EXISTS `{$dbName}`");
+        }
 
         $migratePaths = Twist::getMigratePaths();
 

@@ -22,9 +22,15 @@ class MultiTenantDriver implements IsolationDriver
     {
         $this->end();
 
-        $base = Config::get('database.connections.mysql');
+        $defaultConn = Config::get('database.default', 'mysql');
+        $base = Config::get("database.connections.{$defaultConn}") ?? Config::get('database.connections.mysql');
         $connectionName = 'tenant_' . ($tenant->id ?? uniqid());
-        $database = $tenant->database ?? ($base['database'] . '_' . $tenant->id);
+
+        if (($base['driver'] ?? '') === 'sqlite') {
+            $database = $tenant->database ?? database_path('tenant_' . $tenant->id . '.sqlite');
+        } else {
+            $database = $tenant->database ?? (($base['database'] ?? 'laravel') . '_' . $tenant->id);
+        }
 
         $config = array_merge($base ?? [], [
             'database' => $database,
@@ -33,6 +39,10 @@ class MultiTenantDriver implements IsolationDriver
         Config::set("database.connections.{$connectionName}", $config);
 
         Twist::setConnection($connectionName);
+
+        if (class_exists(\Obelaw\Ium\Engine\GlobalConfigManager::class)) {
+            \Obelaw\Ium\Engine\GlobalConfigManager::set('obelawium.db.connection', $connectionName);
+        }
 
         $this->previousConnection = DB::getDefaultConnection();
         // DB::setDefaultConnection($connectionName);
@@ -47,6 +57,10 @@ class MultiTenantDriver implements IsolationDriver
         if ($this->tenantConnectionName) {
             // Optionally forget connection.
             DB::purge($this->tenantConnectionName);
+        }
+        Twist::setConnection(null);
+        if (class_exists(\Obelaw\Ium\Engine\GlobalConfigManager::class)) {
+            \Obelaw\Ium\Engine\GlobalConfigManager::set('obelawium.db.connection', null);
         }
         $this->previousConnection = null;
         $this->tenantConnectionName = null;
