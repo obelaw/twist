@@ -1,10 +1,11 @@
 <?php
 
-namespace Twist\Base;
+namespace Obelaw\Twist\Base;
 
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use ReflectionClass;
+use ReflectionNamedType;
 
 /**
  * Base Data Transfer Object (DTO) for creating structured data containers.

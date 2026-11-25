@@ -14,13 +14,9 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Obelaw\Obridge\Filament\Resources\ObridgeResource\ListObridge;
 use Obelaw\Obridge\Models\Obridge;
-/**
- * Represents a Price List resource for Filament.
- *
- * This class defines the form, table, and other aspects of how Price Lists
- * are managed within the Filament admin panel.
- */
-class ObridgeResource extends Resource
+use Obelaw\Twist\Base\BaseResource;
+
+class ObridgeResource extends BaseResource
 {
     protected static ?string $model = Obridge::class;
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-book-open';
@@ -70,7 +66,7 @@ class ObridgeResource extends Resource
                 TextColumn::make('description')
                     ->limit(50)
                     ->tooltip(function (TextColumn $column): ?string {
-                        $state = $column->getState();
+                        $state = (string) ($column->getState() ?? '');
                         return strlen($state) > 50 ? $state : null;
                     }),
 
@@ -111,4 +107,4 @@ class ObridgeResource extends Resource
             'index' => ListObridge::route('/'),
         ];
     }
-};
+}

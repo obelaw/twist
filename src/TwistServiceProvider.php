@@ -1,57 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Obelaw\Twist;
 
+use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider;
 use Obelaw\Twist\Addons\AddonsPool;
 use Obelaw\Twist\Classes\TwistManager;
+use Obelaw\Twist\Console\ActionStateCommand;
 use Obelaw\Twist\Console\MakeCommand;
 use Obelaw\Twist\Console\MigrateCommand;
 use Obelaw\Twist\Console\SetupAddonCommand;
 use Obelaw\Twist\Console\SetupClearCommand;
-use Obelaw\Twist\Console\ActionStateCommand;
 use Obelaw\Twist\Console\SetupCommand;
 use Obelaw\Twist\Console\SetupDisableCommand;
 use Obelaw\Twist\Console\SetupEnableCommand;
-use Obelaw\Twist\Console\Tenancy\TenancyMigrateCommand;
-use Obelaw\Twist\Support\TenancyManager;
-use Obelaw\Twist\Tenancy\Drivers\DriverFactory;
 
-class TwistServiceProvider extends ServiceProvider
+final class TwistServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     *
-     * @return void
-     */
-    public function register()
+    public function register(): void
     {
-        $this->mergeConfigFrom(
-            __DIR__ . '/../config/twist.php',
-            'twist'
-        );
+        $this->mergeConfigFrom(__DIR__ . '/../config/twist.php', 'twist');
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/tenancy.php', 'obelaw.tenancy');
-
-        $this->app->singleton('obelaw.twist.twist-class', TwistManager::class);
-
-        // Driver factory
-        $this->app->singleton(DriverFactory::class, function ($app) {
-            $config = $app['config']->get('obelaw.tenancy');
-            return new DriverFactory($config['drivers'] ?? [], $config['default_driver'] ?? null);
-        });
-
-        $this->app->singleton(TenancyManager::class, function ($app) {
-            return new TenancyManager($app->make(DriverFactory::class));
-        });
+        $this->app->singleton(TwistManager::class);
+        $this->app->alias(TwistManager::class, 'obelaw.twist.twist-class');
     }
 
-    /**
-     * Bootstrap services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function boot(): void
     {
         AddonsPool::setPoolPath(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'addons', AddonsPool::LEVELONE);
 
@@ -62,22 +38,20 @@ class TwistServiceProvider extends ServiceProvider
 
             $this->publishes([
                 __DIR__ . '/../config/twist.php' => config_path('twist.php'),
-            ], 'twist');
+            ], 'twist-config');
+
+            $this->commands([
+                ActionStateCommand::class,
+                SetupCommand::class,
+                SetupAddonCommand::class,
+                SetupEnableCommand::class,
+                SetupDisableCommand::class,
+                SetupClearCommand::class,
+                MigrateCommand::class,
+                MakeCommand::class,
+            ]);
         }
 
-        $this->commands([
-            ActionStateCommand::class,
-            SetupCommand::class,
-            SetupAddonCommand::class,
-            SetupEnableCommand::class,
-            SetupDisableCommand::class,
-            SetupClearCommand::class,
-            MigrateCommand::class,
-            // make
-            MakeCommand::class,
-
-            //
-            TenancyMigrateCommand::class
-        ]);
+        AboutCommand::add('Obelawium', static fn () => ['Obelaw Twist' => '1.0.0']);
     }
 }

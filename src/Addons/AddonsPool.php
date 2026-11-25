@@ -1,73 +1,65 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Obelaw\Twist\Addons;
 
 class AddonsPool
 {
-    const LEVELONE = '/*/twist.php';
-    const LEVELTWO = '/**/*/twist.php';
+    public const LEVELONE = '/*/twist.php';
 
-    /**
-     * Pool paths
-     * 
-     * @var array
-     */
-    private static $poolPaths = [];
+    public const LEVELTWO = '/**/*/twist.php';
 
-    /**
-     * Twist paths
-     * 
-     * @var array
-     */
-    private static $twistPaths = [];
+    /** @var list<array{level: string, path: string}> */
+    private static array $poolPaths = [];
 
-    /**
-     * Set new pool path
-     *
-     * @param string $path
-     * @param string|null $level
-     */
-    public static function setPoolPath($path, $level = null): void
+    /** @var list<string> */
+    private static array $twistPaths = [];
+
+    public static function setPoolPath(string $path, ?string $level = null): void
     {
-        array_push(static::$poolPaths, [
+        static::$poolPaths[] = [
             'level' => $level ?? self::LEVELTWO,
-            'path' => $path
-        ]);
+            'path' => $path,
+        ];
     }
 
-    /**
-     * Check if the pool has paths
-     */
     public static function hasPools(): bool
     {
-        return (count(static::$poolPaths) != 0) ? true : false;
+        return static::$poolPaths !== [] || static::$twistPaths !== [];
     }
 
-    public static function loadTwist($twistPath)
+    public static function loadTwist(string $twistPath): void
     {
-        array_push(static::$twistPaths, $twistPath);
+        static::$twistPaths[] = $twistPath;
     }
 
-    /**
-     * Scan the pool paths
-     */
     public static function scan(): void
     {
         foreach (static::$poolPaths as $scan) {
-            foreach (glob($scan['path'] . $scan['level']) as $obelaw) {
+            foreach (glob($scan['path'] . $scan['level']) ?: [] as $obelaw) {
                 require $obelaw;
             }
         }
 
-        if (!empty(static::$twistPaths)) {
-            foreach (static::$twistPaths as $twistPath) {
+        foreach (static::$twistPaths as $twistPath) {
+            if (is_file($twistPath)) {
                 require $twistPath;
             }
         }
     }
 
+    /**
+     * @return list<array{level: string, path: string}>
+     */
     public static function getPoolPaths(): array
     {
         return static::$poolPaths;
+    }
+
+    public static function reset(): void
+    {
+        static::$poolPaths = [];
+        static::$twistPaths = [];
     }
 }

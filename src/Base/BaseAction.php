@@ -100,7 +100,7 @@ abstract class BaseAction
         $user = auth()->user();
 
         // 1. Existing Trail Facade Integration
-        if ($this->trackable) {
+        if ($this->trackable && class_exists(Trail::class)) {
             Trail::for()
                 ->by($user)
                 ->event($eventName)
@@ -110,7 +110,11 @@ abstract class BaseAction
         }
 
         // 2. Structural DB Logging (Actions + Causers + ActionLogs)
-        $this->logToDatabase($user, $eventName, $changes, $result, $status, $exception);
+        try {
+            $this->logToDatabase($user, $eventName, $changes, $result, $status, $exception);
+        } catch (Throwable) {
+            // Ignore if ActionLog database tables do not exist
+        }
     }
 
     /**

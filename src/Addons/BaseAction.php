@@ -81,12 +81,14 @@ abstract class BaseAction
             $changes = []; // Ensure it's always an array.
         }
 
-        Trail::for()
+        if (class_exists(Trail::class)) {
+            Trail::for()
             ->by(auth()->user())
             ->event($eventName)
             ->changes($changes)
             ->snapshot([])
             ->save();
+        }
     }
 
     /**

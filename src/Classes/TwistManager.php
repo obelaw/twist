@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Obelaw\Twist\Classes;
 
 use Illuminate\Support\Facades\DB;
@@ -12,58 +14,89 @@ use Obelaw\Twist\Models\Addon;
 class TwistManager
 {
     private bool $disloadSetupAddons = false;
+
+    /** @var list<BaseAddon> */
     private array $addons = [];
+
+    /** @var list<string> */
     private array $availableAddons = [];
+
+    /** @var list<string> */
     private array $migratePaths = [];
-    private string|null $connection = null;
-    private string|null $uploadDirectory  = null;
+
+    private ?string $connection = null;
+
+    private ?string $uploadDirectory = null;
 
     public function make(): static
     {
         return $this;
     }
 
-    public function loadSetupAddons(string|null $panel = null): array
+    public function defaultPanel(): string
     {
-        $tableAddons = (new Addon)->getTable();
+        $panels = (array) config('twist.panels', ['obelaw']);
+
+        return (string) ($panels[0] ?? 'obelaw');
+    }
+
+    /**
+     * @return list<BaseAddon>
+     */
+    public function loadSetupAddons(?string $panel = null): array
+    {
+        if ($this->disloadSetupAddons) {
+            return [];
+        }
+
+        $addonModel = new Addon();
+        $tableAddons = $addonModel->getTable();
+        $connName = $addonModel->getConnectionName();
+        $schema = $connName ? Schema::connection($connName) : Schema::getFacadeRoot();
+        $db = $connName ? DB::connection($connName) : DB::connection();
 
         $loadAddons = [];
 
-        if (Schema::hasTable($tableAddons)) {
-            $addons = array_map(function ($pointer) {
-                if (class_exists($pointer))
-                    return (new $pointer)->make();
-            }, DB::table($tableAddons)->where(function ($query) use ($panel) {
-                if ($panel)
-                    $query->whereJsonContains('panels', $panel);
-            })->where('is_active', true)->pluck('pointer')->toArray());
+        if ($schema->hasTable($tableAddons)) {
+            $pointers = $db->table($tableAddons)
+                ->where(function ($query) use ($panel): void {
+                    if ($panel !== null && $panel !== '') {
+                        $query->whereJsonContains('panels', $panel);
+                    }
+                })
+                ->where('is_active', true)
+                ->pluck('pointer')
+                ->all();
 
-            $filteredAddons = array_filter($addons, function ($value) {
-                return $value !== null;
-            });
+            foreach ($pointers as $pointer) {
+                if (! is_string($pointer) || ! class_exists($pointer)) {
+                    continue;
+                }
 
-            $loadAddons = array_merge($loadAddons, $filteredAddons);
+                $instance = $pointer::make();
+                if ($instance instanceof BaseAddon && $instance->isEnabledForCurrentTenant()) {
+                    $loadAddons[] = $instance;
+                }
+            }
         }
 
-        $this->addons = array_merge($this->addons, $loadAddons);
+        $this->addons = array_values(array_merge($this->addons, $loadAddons));
 
         return $loadAddons;
     }
 
     /**
-     * Get the value of addons
+     * @return list<BaseAddon>
      */
-    public function getAddons()
+    public function getAddons(): array
     {
         return $this->addons;
     }
 
     /**
-     * Set the value of modules
-     *
-     * @return  self
+     * @param list<BaseAddon> $addons
      */
-    public function appendAddons(array $addons)
+    public function appendAddons(array $addons): self
     {
         foreach ($addons as $addon) {
             $this->appendAddon($addon);
@@ -72,136 +105,114 @@ class TwistManager
         return $this;
     }
 
-    /**
-     * Set the value of addon
-     *
-     * @return  self
-     */
-    public function appendAddon(BaseAddon $addon)
+    public function appendAddon(BaseAddon $addon): self
     {
-        array_push($this->addons, $addon);
+        $this->addons[] = $addon;
 
         return $this;
     }
 
-    /**
-     * Set the value of addons
-     *
-     * @return  self
-     */
-    public function resetAddons()
+    public function resetAddons(): self
     {
         $this->addons = [];
+        $this->availableAddons = [];
 
         return $this;
     }
 
-    /**
-     * Add a migration path.
-     *
-     * @return  self
-     */
-    public function addMigratePath(string $path)
+    public function reset(): self
     {
-        array_push($this->migratePaths, $path);
+        $this->disloadSetupAddons = false;
+        $this->addons = [];
+        $this->availableAddons = [];
+        $this->migratePaths = [];
+        $this->connection = null;
+        $this->uploadDirectory = null;
+
+        return $this;
+    }
+
+    public function addMigratePath(string $path): self
+    {
+        $this->migratePaths[] = $path;
 
         return $this;
     }
 
     /**
-     * Get all migration paths.
+     * @return list<string>
      */
     public function getMigratePaths(): array
     {
         return $this->migratePaths;
     }
 
-    /**
-     * Check if the addon is available
-     * 
-     * @param mixed $id
-     * @return bool
-     */
-    public function hasAddon($id): bool
+    public function hasAddon(string $id): bool
     {
-        $tableAddons = (new Addon)->getTable();
+        $addonModel = new Addon();
+        $tableAddons = $addonModel->getTable();
+        $connName = $addonModel->getConnectionName();
+        $schema = $connName ? Schema::connection($connName) : Schema::getFacadeRoot();
+        $db = $connName ? DB::connection($connName) : DB::connection();
 
-        if (Schema::hasTable($tableAddons) && empty($this->availableAddons)) {
-            $this->availableAddons = DB::table($tableAddons)->where('is_active', true)->pluck('id')->toArray();
+        if ($schema->hasTable($tableAddons) && $this->availableAddons === []) {
+            $this->availableAddons = $db->table($tableAddons)
+                ->where('is_active', true)
+                ->pluck('id')
+                ->all();
         }
 
-        return in_array($id, $this->availableAddons);
+        return in_array($id, $this->availableAddons, true);
     }
 
-    /**
-     * Get the value of disloadSetupAddons
-     */
-    public function getDisloadSetupAddons()
+    public function getDisloadSetupAddons(): bool
     {
         return $this->disloadSetupAddons;
     }
 
-    /**
-     * Set the value of disloadSetupAddons
-     *
-     * @return  self
-     */
-    public function disloadSetupAddons()
+    public function disloadSetupAddons(): self
     {
         $this->disloadSetupAddons = true;
 
         return $this;
     }
 
-    /**
-     * Get the value of uploadDirectory
-     */
-    public function getUploadDirectory()
+    public function getUploadDirectory(): ?string
     {
         return $this->uploadDirectory;
     }
 
-    /**
-     * Get the value of connection
-     */
-    public function getConnection()
+    public function getConnection(): ?string
     {
         return $this->connection;
     }
 
-    /**
-     * Set the value of connection
-     *
-     * @return  self
-     */
-    public function setConnection($connection)
+    public function setConnection(?string $connection): self
     {
         $this->connection = $connection;
 
         return $this;
     }
 
-    /**
-     * Set the value of uploadDirectory
-     *
-     * @return  self
-     */
-    public function setUploadDirectory($uploadDirectory)
+    public function setUploadDirectory(?string $uploadDirectory): self
     {
         $this->uploadDirectory = $uploadDirectory;
 
         return $this;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getRoutesApi(): array
     {
-        $addons = $this->loadSetupAddons();
-
-        $apiRoutes = $this->loadRoutesApiFromAddons($addons);
-
-        return $apiRoutes;
+        return $this->loadRoutesApiFromAddons($this->loadSetupAddons());
     }
 
+    /**
+     * @param list<BaseAddon> $addons
+     * @return list<string>
+     */
     public function loadRoutesApiFromAddons(array $addons): array
     {
         $apiRoutes = [];
@@ -217,9 +228,7 @@ class TwistManager
 
     public function loadHooks(): void
     {
-        $addons = $this->loadSetupAddons();
-
-        foreach ($addons as $addon) {
+        foreach ($this->loadSetupAddons() as $addon) {
             if ($addon instanceof HasHooks) {
                 $addon->hooks();
             }
