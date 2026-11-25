@@ -1,13 +1,18 @@
 {
     "name": "obelaw/twist",
-    "description": "Twist",
+    "description": "Modular Filament v5 Admin Panel & Addon Architecture for Obelawium ERP",
+    "type": "library",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Obelaw\\": "addons/",
-            "Obelaw\\Twist\\": "src/"
-        }
-    },
+    "keywords": [
+        "obelaw",
+        "twist",
+        "filament",
+        "filament-v5",
+        "livewire",
+        "erp",
+        "modular",
+        "laravel"
+    ],
     "authors": [
         {
             "name": "Karim Mohamed",
@@ -15,8 +20,30 @@
         }
     ],
     "require": {
+        "php": "^8.2",
+        "filament/filament": "^5.0",
         "laravel/framework": "^11.0|^12.0|^13.0",
-        "filament/filament": "^3.2|^4.0|^5.0"
+        "obelaw/ium": "^1.0"
+    },
+    "require-dev": {
+        "obelaw/ium-tenancy": "^1.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0",
+        "pestphp/pest-plugin-laravel": "^3.0|^4.0"
+    },
+    "suggest": {
+        "obelaw/ium-tenancy": "Enable Database-per-Tenant isolation for Filament panels via TwistPanel::tenancy() (^1.0)."
+    },
+    "autoload": {
+        "psr-4": {
+            "Obelaw\\": "addons/",
+            "Obelaw\\Twist\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Obelaw\\Twist\\Tests\\": "tests/"
+        }
     },
     "extra": {
         "laravel": {
@@ -25,6 +52,15 @@
             ]
         }
     },
-    "minimum-stability": "dev",
+    "scripts": {
+        "test": "vendor/bin/pest"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
